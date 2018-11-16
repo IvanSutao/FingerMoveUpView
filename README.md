@@ -1,0 +1,2 @@
+# FingerMoveUpView
+仿链家地图页房产列表页，可自动吸附功能Scrollery应用
