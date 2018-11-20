@@ -23,7 +23,7 @@ import code.ivan.com.slideviewinorout.R;
 public class FingerMoveUpView extends RelativeLayout {
 
     private Context mContext;
-        private RelativeLayout mTitleRl; //头部容器
+    private RelativeLayout mTitleRl; //头部容器
     private RelativeLayout mContentRl; //内容容器
     private int mScreemHeight; // 屏幕高度，不包含状态栏
     /**
@@ -45,7 +45,8 @@ public class FingerMoveUpView extends RelativeLayout {
     private int mContentL; //内容容器 左边坐标
     private int mContentR; //内容容器 右边坐标
     private int mContentB; //内容容器 下边坐标
-    private boolean mCanScroll = true; //标识是否可以滑动内容容器
+    private boolean mCanPullUp = true; //标识是否可以滑动内容区域
+    private boolean mCanClick = true; //标识是否拦截点击事件
 
     private Scroller mScroller;
 
@@ -84,14 +85,39 @@ public class FingerMoveUpView extends RelativeLayout {
         mContentRl.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(mContext, "hello", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "pink", Toast.LENGTH_SHORT).show();
+            }
+        });
+        mTitleRl.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(mContext, "green", Toast.LENGTH_SHORT).show();
+            }
+        });
+        findViewById(R.id.background).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(mContext, "yellow", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        findViewById(R.id.tv_item1).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(mContext, "item 1", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        return mCanScroll;
+        switch (ev.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                int downX = (int) ev.getRawY();
+                mCanClick = downX >= mScreemHeight - mContentRl.getHeight();
+                break;
+        }
+        return mCanPullUp && mCanClick;
     }
 
 
@@ -108,7 +134,7 @@ public class FingerMoveUpView extends RelativeLayout {
                 mDownY = (int) ev.getRawY();
                 break;
             case MotionEvent.ACTION_MOVE:
-                if (!mCanScroll) {
+                if (!mCanPullUp || !mCanClick) {
                     return false;
                 }
                 int offY = y - mDownY;//向上为负数，向下为正数
@@ -127,12 +153,12 @@ public class FingerMoveUpView extends RelativeLayout {
             case MotionEvent.ACTION_UP:
                 if (mContentRl.getHeight() >= mMidHeight) {
                     mScroller.startScroll(0, mContentRl.getTop(), 0, mContentRl.getHeight() - mMaxHeight);
-                    mCanScroll = false;
+                    mCanPullUp = false;
                     invalidate();
                 }
                 if (mContentRl.getHeight() < mMidHeight) {
                     mScroller.startScroll(0, mContentRl.getTop(), 0, mContentRl.getHeight() - mMinHeight);
-                    mCanScroll = true;
+                    mCanPullUp = true;
                     invalidate();
                 }
                 break;
@@ -149,7 +175,7 @@ public class FingerMoveUpView extends RelativeLayout {
             invalidate();
         }
 
-        if (!mCanScroll) {
+        if (!mCanPullUp) {
             RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mContentRl.getLayoutParams();
             params.height = mMaxHeight;
             mTitleRl.setVisibility(VISIBLE); // 此方法会刷新整个页面，导致mContentRl重新刷新回到初始化时设置的高度。因此需要重新设置mContentRl的高度
